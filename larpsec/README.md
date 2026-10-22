@@ -1,4 +1,4 @@
-# Larpsec 2.1 para Matcha
+# Larpsec 2.2 para Matcha
 
 Selector cosmético local para Murder Duels. El panel negro aparece al ejecutar; **Right Shift** lo abre y lo oculta. Elige una skin y cambia de arma normalmente para que el juego reconstruya el modelo.
 
@@ -7,7 +7,7 @@ Selector cosmético local para Murder Duels. El panel negro aparece al ejecutar;
 Pega esta línea en el editor Lua de Matcha, dentro de Murder Duels:
 
 ```lua
-loadstring(httpget("https://raw.githubusercontent.com/JoelllL-U/Filegame/main/larpsec/Larpsec.lua"))()
+loadstring(httpget("https://raw.githubusercontent.com/JoelllL-U/Filegame/refs/heads/main/larpsec/Larpsec.lua"))()
 ```
 
 No se ejecuta en PowerShell. No hace falta copiar Larpsec.lua al PC ni mantener un servidor local. Matcha sigue siendo necesario. El script crea automáticamente el perfil y la caché en `C:\matcha\workspace\Larpsec`.
@@ -18,7 +18,7 @@ No se ejecuta en PowerShell. No hace falta copiar Larpsec.lua al PC ni mantener 
 |---|---|
 | Panel, IDs de hasta 15 caracteres, perfil y Auto Apply | Drawing, UI Binding y archivos de Matcha; sin Hybrid ni Unsafe. |
 | IDs largos | **Allow Unsafe LuaU** en Matcha y **Extended skins = ON** en Larpsec. Si no se valida la disposición de memoria, esas skins no aparecen. |
-| Iconos inferiores | Hotbar skin icons = ON, imágenes descargadas, Roblox en primer plano y panel cerrado. Aún pendientes de confirmación visual. |
+| Iconos inferiores | Hotbar skin icons = ON, imágenes descargadas, Roblox en primer plano y panel cerrado. Verificados visualmente en la resolución actual. |
 | Acento 2D de eliminación | Opción independiente en Kill Effects. No equivale al finisher nativo. |
 
 Larpsec no llama FireServer ni InvokeServer. Hybrid no es necesario para las funciones implementadas; durante las pruebas ya estaba activado y no se cambió esa preferencia.
@@ -39,11 +39,11 @@ El perfil conserva las dos skins, favoritos, Auto Apply y preferencias. Auto App
 
 ## Comprobado y pendiente
 
-- Guardado, recarga con Auto Apply activado y apagado, recarga de un ID largo y limpieza de los 346 dibujos registrados: comprobados.
+- Guardado, recarga con Auto Apply activado y apagado, recarga de un ID largo y limpieza de los dibujos registrados: comprobados. La versión 2.2 registra 350 dibujos, incluidos los fondos de los iconos.
 - Omega Energy Blade, Green Energy Blade y Omega Energy Blaster: reconstrucción nativa comprobada; sus cantidades de MeshPart coinciden con las plantillas. Blue Energy Blaster fue rechazada correctamente por conflicto con otro jugador. Las demás skins largas no están certificadas individualmente.
-- **Iconos inferiores sin resolver:** se corrigió la posición vertical y se reforzó la limpieza. Las imágenes cargan, pero el usuario indicó que aún no se ven.
+- **Iconos inferiores corregidos:** se encontraron dos fallos propios del script: posición vertical incorrecta y opacidad cero en esta instalación. Se verificaron en pantalla Seraphim y Murder Note dentro de las ranuras, con tamaño reducido y fondos que cubren el arma anterior. Se conservan las teclas y los bordes nativos. Es una superposición local; no cambia la propiedad Image del juego. No se certificaron otras resoluciones o escalas de Windows.
 - **Finishers nativos sin resolver:** Kill Effects muestra los recursos encontrados y permite feedback 2D. No ejecuta ni equipa los efectos nativos. Sus módulos visuales son locales, pero esta API no permite invocarlos directamente. La afirmación anterior de que todos eran exclusivamente del servidor era demasiado amplia.
-- **Repeticiones sin resolver:** los actores de replay usan datos separados de LocalPlayer. Esta versión no modifica la grabación ni garantiza corregir el arma invisible o la mira.
+- **Repeticiones:** los cambios cosméticos se pausan al entrar y se reanudan al salir; esta transición se comprobó. La selección guardada se conserva. El arma invisible persistió en la grabación probada después de descargar Larpsec y restaurar los atributos originales a Default. No se ha corregido esa invisibilidad ni se muestran las skins personalizadas en replay. Los actores usan datos separados de LocalPlayer.
 - Los paquetes de sonido y animación se conservan y se resuelven mediante el nombre corto cuando están disponibles. No se ha probado cada disparo, estela, animación, sonido o evento de muerte de cada skin. No se promete equivalencia completa.
 
 No se inició ningún duelo. Una prueba descartada de mover una copia dejó una referencia vacía en el personaje de práctica; el personaje se regeneró y esa técnica no forma parte del producto.
