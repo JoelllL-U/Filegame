@@ -530,7 +530,7 @@ local function save(silent)
         writefile(configPath, encoded)
         assert(readfile(configPath) == encoded, "Profile verification failed")
     end)
-    state.ProfileError = ok and nil or tostring(failure)
+    if ok then state.ProfileError = nil else state.ProfileError = tostring(failure) end
     if not ok then
         setStatus("Could not save the profile: " .. state.ProfileError)
         print("Larpsec profile: " .. state.ProfileError)
