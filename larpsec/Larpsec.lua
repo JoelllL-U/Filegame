@@ -204,6 +204,8 @@ local state = {
     AliasBindings = {},
     AliasNames = {},
     Suspended = {},
+    ReplayActive = false,
+    ResumeAfterReplay = false,
     Page = 1,
     Tab = "Skins",
     Filter = "All",
@@ -241,16 +243,18 @@ local state = {
     Bounds = {},
     Hover = "",
     LastToggle = -10,
-    Version = "2.1",
+    Version = "2.2",
     DrawingRegistry = {},
     ProfileLoaded = false,
     IconCount = 0
 }
 env.Larpsec = state
 local overlayDrawings = {}
+local overlayBackings = {}
 local overlayImageRefs = {}
 local killPool = {}
 state.OverlayDrawings = overlayDrawings
+state.OverlayBackings = overlayBackings
 state.KillPool = killPool
 local kinds = {"Knife", "Revolver"}
 local labels = {Knife = "KNIFE", Revolver = "REVOLVER"}
@@ -264,6 +268,8 @@ local effectFolders = {
 local effectAttributes = {Knife = "ThrowEffect", Revolver = "ShotEffect"}
 local effectAliases = {HeartKeeperKnife = "HeartKeeperTrail", HeartStealerKnife = "HeartStealerTrail"}
 local mouse = player:GetMouse()
+local replayRoot = workspace:FindFirstChild("Replays")
+state.ReplayActive = replayRoot ~= nil and #replayRoot:GetChildren() > 0
 local configPath = "Larpsec/profile.json"
 local legacyConfigPath = "Vinland/profile.json"
 local colors = {
@@ -575,6 +581,14 @@ local function queue(kind, id, silent)
     id = tostring(id)
     local item = state.Lookup[kind .. ":" .. id]
     if not item then return false end
+    if state.ReplayActive then
+        state.Selected[kind] = id
+        state.ResumeAfterReplay = true
+        state.Dirty = true
+        if not silent then save(true) end
+        setStatus("Replay active. This selection will apply after you leave the replay.")
+        return true
+    end
     local attr = kind .. "Skin"
     local previousSelected = state.Selected[kind]
     local previousRevision = state.SelectionRevision[kind] or 0
@@ -667,6 +681,7 @@ local function restore(silent)
     state.EffectFailedValue = {}
     state.EffectUnavailable = {}
     if not silent then
+        state.ResumeAfterReplay = false
         save(true)
         setStatus("Original skins restored. Saved loadout retained. Switch weapons to refresh.")
     end
@@ -1141,13 +1156,25 @@ local overlayReady = pcall(function()
         local image = Drawing.new("Image")
         state.DrawingRegistry[#state.DrawingRegistry + 1] = image
         image.Visible = false
-        image.Transparency = 0
+        image.Transparency = 1
         image.ZIndex = 1000
         overlayDrawings[kind] = image
+        overlayBackings[kind] = {}
+        for i = 1, 2 do
+            local backing = Drawing.new("Square")
+            state.DrawingRegistry[#state.DrawingRegistry + 1] = backing
+            backing.Visible = false
+            backing.Transparency = 1
+            backing.Filled = true
+            backing.Color = colors.Panel
+            backing.ZIndex = 999
+            overlayBackings[kind][i] = backing
+        end
     end
 end)
 if not overlayReady then
     for _, image in pairs(overlayDrawings) do pcall(function() image:Remove() end) end
+    for _, masks in pairs(overlayBackings) do for _, mask in ipairs(masks) do pcall(function() mask:Remove() end) end end
     overlayDrawings = {}
     state.HotbarOverlay = false
     setStatus("Hotbar icon overlay is unavailable in this Matcha build.")
@@ -1211,6 +1238,7 @@ end
 
 local function hideOverlayDrawings()
     for _, image in pairs(overlayDrawings) do pcall(function() image.Visible = false end) end
+    for _, masks in pairs(overlayBackings) do for _, mask in ipairs(masks) do pcall(function() mask.Visible = false end) end end
     for _, entry in ipairs(killPool) do
         pcall(function() entry.Ring.Visible = false end)
         pcall(function() entry.Label.Visible = false end)
@@ -1228,6 +1256,8 @@ local function drawLocalOverlays()
         local uiScaleX = math.max(0.75, math.min(1.5, viewport.X / 1536))
         for _, kind in ipairs(kinds) do
             local image = overlayDrawings[kind]
+            local masks = overlayBackings[kind]
+            if masks then for _, mask in ipairs(masks) do mask.Visible = false end end
             local ref = state.HotbarRefs[kind]
             local anchor = ref and ref.Icon
             local slot = ref and ref.Slot
@@ -1244,13 +1274,22 @@ local function drawLocalOverlays()
                     if loaded then overlayImageRefs[kind] = item.Icon end
                 end
                 local slotGap = slotPosition and otherPosition and math.abs(otherPosition.X - slotPosition.X) or 96
-                local imageSize = math.max(80, math.min(150, slotGap * uiScaleX * 0.84))
+                local imageSize = math.max(60, math.min(130, slotGap * uiScaleX * 0.69))
                 local screenX = anchorPosition.X * uiScaleX
                 local screenY = anchorPosition.Y * uiScaleX
+                local maskSize = slotGap * uiScaleX * 0.76
                 pcall(function()
                     image.Position = Vector2.new(screenX, screenY)
                     image.Size = Vector2.new(imageSize, imageSize)
                     image.Visible = screenX > 0 and screenY > 0 and screenX < viewport.X and screenY < viewport.Y
+                    if masks and image.Visible then
+                        masks[1].Position = Vector2.new(screenX + 16 * uiScaleX, screenY - 3 * uiScaleX)
+                        masks[1].Size = Vector2.new(maskSize - 19 * uiScaleX, 22 * uiScaleX)
+                        masks[2].Position = Vector2.new(screenX - 3 * uiScaleX, screenY + 19 * uiScaleX)
+                        masks[2].Size = Vector2.new(maskSize, maskSize - 19 * uiScaleX)
+                        masks[1].Visible = true
+                        masks[2].Visible = true
+                    end
                 end)
             elseif image then
                 pcall(function() image.Visible = false end)
@@ -1258,23 +1297,24 @@ local function drawLocalOverlays()
         end
     else
         for _, image in pairs(overlayDrawings) do pcall(function() image.Visible = false end) end
+        for _, masks in pairs(overlayBackings) do for _, mask in ipairs(masks) do pcall(function() mask.Visible = false end) end end
     end
     local now = tick()
     for i, entry in ipairs(killPool) do
         local event = state.DeathEvents[i]
         local ring, label = entry.Ring, entry.Label
-        if state.LocalKillOverlay and state.Active ~= false and event and now < event.Expires then
+        if state.LocalKillOverlay and not state.ReplayActive and state.Active ~= false and event and now < event.Expires then
             local point, onScreen = WorldToScreen(event.Position)
             if onScreen then
                 local progress = math.max(0, math.min(1, 1 - (event.Expires - now) / 1.6))
                 pcall(function()
                     ring.Position = point
                     ring.Radius = 8 + progress * 25
-                    ring.Transparency = progress * 0.55
+                    ring.Transparency = 1 - progress * 0.85
                     ring.Visible = true
                     label.Text = event.Label or "ELIMINATION"
                     label.Position = Vector2.new(point.X, point.Y - 34 - progress * 12)
-                    label.Transparency = progress * 0.55
+                    label.Transparency = 1 - progress * 0.85
                     label.Visible = true
                 end)
             else
@@ -1289,8 +1329,29 @@ local function drawLocalOverlays()
     end
 end
 
+local function updateReplayContext()
+    local active = replayRoot ~= nil and #replayRoot:GetChildren() > 0
+    if active == state.ReplayActive then return end
+    state.ReplayActive = active
+    if active then
+        local resume = state.ApplyEnabled
+        restore(true)
+        state.ResumeAfterReplay = resume
+        setStatus("Replay active. Cosmetic overrides are paused; the recorded loadout is unchanged.")
+    elseif state.ResumeAfterReplay then
+        state.ResumeAfterReplay = false
+        for _, kind in ipairs(kinds) do
+            local id = state.Selected[kind]
+            if id then queue(kind, id, true) end
+        end
+        setStatus("Replay ended. Saved cosmetics resumed; switch weapons to refresh.")
+    end
+end
+
 task.spawn(function()
     while state.Running do
+        local replayOk, replayError = pcall(updateReplayContext)
+        if not replayOk then setStatus("Could not update replay state: " .. tostring(replayError)) end
         pcall(findHotbarRefs)
         pcall(updateOverlayItems)
         for kind, binding in pairs(state.AliasBindings) do
