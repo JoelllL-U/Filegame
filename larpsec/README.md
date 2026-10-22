@@ -1,4 +1,4 @@
-# Larpsec 2.2 para Matcha
+# Larpsec 2.3 para Matcha
 
 Selector cosmético local para Murder Duels. El panel negro aparece al ejecutar; **Right Shift** lo abre y lo oculta. Elige una skin y cambia de arma normalmente para que el juego reconstruya el modelo.
 
@@ -18,7 +18,7 @@ No se ejecuta en PowerShell. No hace falta copiar Larpsec.lua al PC ni mantener 
 |---|---|
 | Panel, IDs de hasta 15 caracteres, perfil y Auto Apply | Drawing, UI Binding y archivos de Matcha; sin Hybrid ni Unsafe. |
 | IDs largos | **Allow Unsafe LuaU** en Matcha y **Extended skins = ON** en Larpsec. Si no se valida la disposición de memoria, esas skins no aparecen. |
-| Iconos inferiores | Hotbar skin icons = ON, imágenes descargadas, Roblox en primer plano y panel cerrado. Verificados visualmente en la resolución actual. |
+| Iconos inferiores | Hotbar skin icons = ON, imágenes descargadas, Roblox en primer plano y panel cerrado. La LuaVM confirma la misma posición absoluta del icono nativo y vuelve a localizar las ranuras cuatro veces por segundo; la captura visual no estuvo disponible en esta sesión. |
 | Acento 2D de eliminación | Opción independiente en Kill Effects. No equivale al finisher nativo. |
 
 Larpsec no llama FireServer ni InvokeServer. Hybrid no es necesario para las funciones implementadas; durante las pruebas ya estaba activado y no se cambió esa preferencia.
@@ -39,10 +39,10 @@ El perfil conserva las dos skins, favoritos, Auto Apply y preferencias. Auto App
 
 ## Comprobado y pendiente
 
-- Guardado, recarga con Auto Apply activado y apagado, recarga de un ID largo y limpieza de los dibujos registrados: comprobados. La versión 2.2 registra 350 dibujos, incluidos los fondos de los iconos.
+- Guardado, recarga con Auto Apply activado y apagado, recarga de un ID largo y limpieza de los dibujos registrados: comprobados. La versión 2.3 registra 350 dibujos, incluidos los fondos de los iconos.
 - Omega Energy Blade, Green Energy Blade y Omega Energy Blaster: reconstrucción nativa comprobada; sus cantidades de MeshPart coinciden con las plantillas. Blue Energy Blaster fue rechazada correctamente por conflicto con otro jugador. Las demás skins largas no están certificadas individualmente.
-- **Iconos inferiores corregidos:** se encontraron dos fallos propios del script: posición vertical incorrecta y opacidad cero en esta instalación. Se verificaron en pantalla Seraphim y Murder Note dentro de las ranuras, con tamaño reducido y fondos que cubren el arma anterior. Se conservan las teclas y los bordes nativos. Es una superposición local; no cambia la propiedad Image del juego. No se certificaron otras resoluciones o escalas de Windows.
-- **Finishers nativos sin resolver:** Kill Effects muestra los recursos encontrados y permite feedback 2D. No ejecuta ni equipa los efectos nativos. Sus módulos visuales son locales, pero esta API no permite invocarlos directamente. La afirmación anterior de que todos eran exclusivamente del servidor era demasiado amplia.
+- **Geometría de iconos:** en Viewport `1002x750`, la posición de dibujo coincidió con `WeaponIcon.AbsolutePosition` en las dos ranuras (`336.78,533.39` y `413.61,526.63`); las imágenes personalizadas cargaron y se estimó el tamaño desde el margen real de la ranura (`64x64`). Las máscaras ahora llegan hasta ese mismo borde y las referencias se renuevan cada 0.25 s para seguir cambios de la GUI. No tuve captura de Roblox disponible en esta sesión, así que no afirmo que la cobertura visual ni el menú de ventajas estén verificados píxel por píxel.
+- **Finishers nativos sin resolver:** Kill Effects muestra recursos y permite feedback 2D, pero no reproduce ni equipa el finisher del juego. Los paquetes nativos existen en el cliente, pero Matcha no ejecuta `ModuleScript` de Roblox desde `require` y no expone `Instance.new`, `Clone` ni `Destroy`, que necesita el reproductor del juego. Hybrid habilita llamadas remotas, pero eso modificaría el flujo del servidor y no es una solución client-only. El acento 2D no equivale al efecto nativo.
 - **Repeticiones:** los cambios cosméticos se pausan al entrar y se reanudan al salir; esta transición se comprobó. La selección guardada se conserva. El arma invisible persistió en la grabación probada después de descargar Larpsec y restaurar los atributos originales a Default. No se ha corregido esa invisibilidad ni se muestran las skins personalizadas en replay. Los actores usan datos separados de LocalPlayer.
 - Los paquetes de sonido y animación se conservan y se resuelven mediante el nombre corto cuando están disponibles. No se ha probado cada disparo, estela, animación, sonido o evento de muerte de cada skin. No se promete equivalencia completa.
 
@@ -59,3 +59,4 @@ codex mcp add matcha --url http://127.0.0.1:8765/mcp
 El MCP sirve para investigar durante el desarrollo. No hace falta para ejecutar el loader.
 
 Referencias: [memoria y riesgos](https://huoadf.github.io/matcha-docs/memory/), [API e Hybrid](https://huoadf.github.io/matcha-docs/classes/), [require y ejecución protegida](https://huoadf.github.io/matcha-docs/functions-misc/). Las pruebas de la instalación tienen prioridad cuando las referencias difieren.
+
