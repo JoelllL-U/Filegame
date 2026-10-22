@@ -243,7 +243,7 @@ local state = {
     Bounds = {},
     Hover = "",
     LastToggle = -10,
-    Version = "2.2",
+    Version = "2.3",
     DrawingRegistry = {},
     ProfileLoaded = false,
     IconCount = 0
@@ -1253,7 +1253,7 @@ local function drawLocalOverlays()
         return
     end
     if state.HotbarOverlay and state.HotbarInMatch and not state.Visible and state.Active ~= false then
-        local uiScaleX = math.max(0.75, math.min(1.5, viewport.X / 1536))
+        local uiScaleX = 1
         for _, kind in ipairs(kinds) do
             local image = overlayDrawings[kind]
             local masks = overlayBackings[kind]
@@ -1274,18 +1274,19 @@ local function drawLocalOverlays()
                     if loaded then overlayImageRefs[kind] = item.Icon end
                 end
                 local slotGap = slotPosition and otherPosition and math.abs(otherPosition.X - slotPosition.X) or 96
-                local imageSize = math.max(60, math.min(130, slotGap * uiScaleX * 0.69))
+                local iconInset = slotPosition and math.abs(anchorPosition.X - slotPosition.X) or slotGap * 0.08
+                local imageSize = math.max(32, math.min(130, slotGap - iconInset * 2))
                 local screenX = anchorPosition.X * uiScaleX
                 local screenY = anchorPosition.Y * uiScaleX
-                local maskSize = slotGap * uiScaleX * 0.76
+                local maskSize = imageSize
                 pcall(function()
                     image.Position = Vector2.new(screenX, screenY)
                     image.Size = Vector2.new(imageSize, imageSize)
                     image.Visible = screenX > 0 and screenY > 0 and screenX < viewport.X and screenY < viewport.Y
                     if masks and image.Visible then
                         masks[1].Position = Vector2.new(screenX + 16 * uiScaleX, screenY - 3 * uiScaleX)
-                        masks[1].Size = Vector2.new(maskSize - 19 * uiScaleX, 22 * uiScaleX)
-                        masks[2].Position = Vector2.new(screenX - 3 * uiScaleX, screenY + 19 * uiScaleX)
+                        masks[1].Size = Vector2.new(maskSize - 16 * uiScaleX, 22 * uiScaleX)
+                        masks[2].Position = Vector2.new(screenX, screenY + 19 * uiScaleX)
                         masks[2].Size = Vector2.new(maskSize, maskSize - 19 * uiScaleX)
                         masks[1].Visible = true
                         masks[2].Visible = true
@@ -1352,7 +1353,6 @@ task.spawn(function()
     while state.Running do
         local replayOk, replayError = pcall(updateReplayContext)
         if not replayOk then setStatus("Could not update replay state: " .. tostring(replayError)) end
-        pcall(findHotbarRefs)
         pcall(updateOverlayItems)
         for kind, binding in pairs(state.AliasBindings) do
             if aliasConflict(kind, binding.Id) then
@@ -1367,6 +1367,13 @@ task.spawn(function()
             end
         end
         task.wait(1)
+    end
+end)
+
+task.spawn(function()
+    while state.Running do
+        pcall(findHotbarRefs)
+        task.wait(0.25)
     end
 end)
 
