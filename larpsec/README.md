@@ -1,4 +1,4 @@
-# Larpsec 2.3 para Matcha
+# Larpsec 2.4 para Matcha
 
 Selector cosmético local para Murder Duels. El panel negro aparece al ejecutar; **Right Shift** lo abre y lo oculta. Elige una skin y cambia de arma normalmente para que el juego reconstruya el modelo.
 
@@ -18,7 +18,7 @@ No se ejecuta en PowerShell. No hace falta copiar Larpsec.lua al PC ni mantener 
 |---|---|
 | Panel, IDs de hasta 15 caracteres, perfil y Auto Apply | Drawing, UI Binding y archivos de Matcha; sin Hybrid ni Unsafe. |
 | IDs largos | **Allow Unsafe LuaU** en Matcha y **Extended skins = ON** en Larpsec. Si no se valida la disposición de memoria, esas skins no aparecen. |
-| Iconos inferiores | Hotbar skin icons = ON, imágenes descargadas, Roblox en primer plano y panel cerrado. La LuaVM confirma la misma posición absoluta del icono nativo y vuelve a localizar las ranuras cuatro veces por segundo; la captura visual no estuvo disponible en esta sesión. |
+| Iconos del hotbar | La sustitución directa no está expuesta en esta build. El overlay Drawing quedó desactivado en 2.4 porque la captura mostró que flotaba sobre las ranuras. Hybrid no cambia esta propiedad; Unsafe LuaU no ofrece un setter seguro para imágenes. |
 | Acento 2D de eliminación | Opción independiente en Kill Effects. No equivale al finisher nativo. |
 
 Larpsec no llama FireServer ni InvokeServer. Hybrid no es necesario para las funciones implementadas; durante las pruebas ya estaba activado y no se cambió esa preferencia.
@@ -39,9 +39,9 @@ El perfil conserva las dos skins, favoritos, Auto Apply y preferencias. Auto App
 
 ## Comprobado y pendiente
 
-- Guardado, recarga con Auto Apply activado y apagado, recarga de un ID largo y limpieza de los dibujos registrados: comprobados. La versión 2.3 registra 350 dibujos, incluidos los fondos de los iconos.
+- Guardado, recarga con Auto Apply activado y apagado, recarga de un ID largo y limpieza de los dibujos registrados: comprobados. La versión 2.4 desactiva el overlay desalineado y conserva el hotbar nativo.
 - Omega Energy Blade, Green Energy Blade y Omega Energy Blaster: reconstrucción nativa comprobada; sus cantidades de MeshPart coinciden con las plantillas. Blue Energy Blaster fue rechazada correctamente por conflicto con otro jugador. Las demás skins largas no están certificadas individualmente.
-- **Geometría de iconos:** en Viewport `1002x750`, la posición de dibujo coincidió con `WeaponIcon.AbsolutePosition` en las dos ranuras (`336.78,533.39` y `413.61,526.63`); las imágenes personalizadas cargaron y se estimó el tamaño desde el margen real de la ranura (`64x64`). Las máscaras ahora llegan hasta ese mismo borde y las referencias se renuevan cada 0.25 s para seguir cambios de la GUI. No tuve captura de Roblox disponible en esta sesión, así que no afirmo que la cobertura visual ni el menú de ventajas estén verificados píxel por píxel.
+- **Iconos del hotbar:** la captura 948×585 mostró los dibujos por encima de las ranuras y con separación horizontal incorrecta; la afirmación anterior de alineación queda retirada. El probe en vivo leyó `WeaponIcon.Image = nil` y `AbsoluteSize = 0×0` en Matcha. El código del juego asigna `Icon.Image` dentro de su propio `LocalScript`, pero esa propiedad no está disponible para escritura en esta VM externa. La versión 2.4 desactiva el overlay; la sustitución nativa sigue sin resolverse.
 - **Finishers nativos sin resolver:** Kill Effects muestra recursos y permite feedback 2D, pero no reproduce ni equipa el finisher del juego. Los paquetes nativos existen en el cliente, pero Matcha no ejecuta `ModuleScript` de Roblox desde `require` y no expone `Instance.new`, `Clone` ni `Destroy`, que necesita el reproductor del juego. Hybrid habilita llamadas remotas, pero eso modificaría el flujo del servidor y no es una solución client-only. El acento 2D no equivale al efecto nativo.
 - **Repeticiones:** los cambios cosméticos se pausan al entrar y se reanudan al salir; esta transición se comprobó. La selección guardada se conserva. El arma invisible persistió en la grabación probada después de descargar Larpsec y restaurar los atributos originales a Default. No se ha corregido esa invisibilidad ni se muestran las skins personalizadas en replay. Los actores usan datos separados de LocalPlayer.
 - Los paquetes de sonido y animación se conservan y se resuelven mediante el nombre corto cuando están disponibles. No se ha probado cada disparo, estela, animación, sonido o evento de muerte de cada skin. No se promete equivalencia completa.
