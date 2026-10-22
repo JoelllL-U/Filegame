@@ -197,7 +197,7 @@ local state = {
     Enabled = true,
     AutoApply = true,
     ApplyEnabled = false,
-    HotbarOverlay = true,
+    HotbarOverlay = false,
     LocalKillOverlay = false,
     ExtendedSkins = true,
     UnsafeReady = false,
@@ -243,7 +243,7 @@ local state = {
     Bounds = {},
     Hover = "",
     LastToggle = -10,
-    Version = "2.3",
+    Version = "2.4",
     DrawingRegistry = {},
     ProfileLoaded = false,
     IconCount = 0
@@ -965,13 +965,8 @@ local function render()
                 setStatus("Auto Apply " .. (state.AutoApply and "enabled" or "disabled") .. ".")
             end, state.AutoApply)
             rect(238, 291, 634, 1, colors.Border)
-            text("Hotbar skin icons", 238, 307, 13, colors.White, 460)
-            text("Overlay the saved skin icons on the two weapon slots", 238, 326, 10, colors.Muted, 460)
-            button("hotbaroverlay", state.HotbarOverlay and "ON" or "OFF", 790, 308, 82, 34, function()
-                state.HotbarOverlay = not state.HotbarOverlay
-                save(true)
-                setStatus("Hotbar icon overlay " .. (state.HotbarOverlay and "enabled" or "disabled") .. ".")
-            end, state.HotbarOverlay)
+            text("Hotbar icons", 238, 307, 13, colors.White, 460)
+            text("Native icon editing is not exposed in this Matcha build. The broken overlay is disabled.", 238, 326, 10, colors.Muted, 460)
             rect(238, 360, 634, 1, colors.Border)
             text("Extended skins", 238, 376, 13, colors.White, 460)
             text("Long IDs need Allow Unsafe LuaU. Memory layout is checked at startup.", 238, 395, 10, colors.Muted, 460)
@@ -1107,7 +1102,6 @@ local profileOk, profileError = pcall(function()
         local config = Http:JSONDecode(readfile(configPath))
         if type(config) == "table" and (config.Version == 1 or config.Version == 2) then
             if type(config.AutoApply) == "boolean" then state.AutoApply = config.AutoApply end
-            if type(config.HotbarOverlay) == "boolean" then state.HotbarOverlay = config.HotbarOverlay end
             if type(config.ExtendedSkins) == "boolean" then state.ExtendedSkins = config.ExtendedSkins end
             if type(config.LocalKillOverlay) == "boolean" then state.LocalKillOverlay = config.LocalKillOverlay end
             if type(config.Favorites) == "table" then
